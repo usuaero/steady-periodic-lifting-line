@@ -10,7 +10,7 @@ class Filament:
         self.z_fil = z_fil
         self.z_cp = z_cp
         self.w = w
-        self.V_inf = V_inf,
+        self.V_inf = V_inf
         self.G_A = G_A
         self.y_A = y_A
         self.phi_p = phi_p
@@ -58,6 +58,18 @@ class Filament:
         return self.G_A*S_G*dV/(4.0*np.pi*r)
 
 
+    def dV_alt(self, theta):
+        # Calculates the differential element of induced velocity from a station theta on the filament assuming a straight filament
+
+        # Calculate params
+        h = self.dz
+
+        if theta == 0.0:
+            return 0.0
+        else:
+            return -self.G_A*np.sin(theta)*np.sin(self.w*h/(self.V_inf*np.tan(theta))+self.phi_G)/(4.0*np.pi*h)
+
+
 def gauss_quad_sixth_integration_vec(f, a, b):
     # Uses sixth-order Gaussian quadrature to compute the integral of a function
 
@@ -77,6 +89,23 @@ def gauss_quad_sixth_integration_vec(f, a, b):
     return 0.5*(b-a)*np.sum(c[:,np.newaxis]*vals, axis=0)
 
 
+def boole_integration(f, a, b, N):
+    # Uses Boole's rule to compute the integral of f from a to b using N points (N must be N = 5*m+1)
+
+    # Get function values
+    x = np.linspace(a, b, N)
+    vals = np.zeros(N)
+    for i in range(N):
+        vals[i] = f(x[i])
+
+    # Get summation
+    I = 0.0
+    for i in range(0, N-1, 5):
+        I += (x[i+5]-x[i])*(19.0*vals[i]+75.0*vals[i+1]+50.0*vals[i+2]+50.0*vals[i+3]+75.0*vals[i+4]+19.0*vals[i+5])
+
+    return I/288.0
+
+
 def boole_integration_vec(f, a, b, N):
     # Uses Boole's rule to compute the integral of f from a to b using N points (N must be N = 5*m+1)
 
@@ -86,15 +115,12 @@ def boole_integration_vec(f, a, b, N):
     for i in range(N):
         vals[i] = f(x[i])
 
-    # Some preliminaries
-    C = 1.0/288.0
-
     # Get summation
     I = np.zeros(3)
     for i in range(0, N-1, 5):
         I += (x[i+5]-x[i])*(19.0*vals[i]+75.0*vals[i+1]+50.0*vals[i+2]+50.0*vals[i+3]+75.0*vals[i+4]+19.0*vals[i+5])
 
-    return I*C
+    return I/288.0
 
 
 if __name__=="__main__":
@@ -105,12 +131,18 @@ if __name__=="__main__":
     z = 0.0
     w = 1.0
     V_inf = 10.0
-    y_A = 1.0
+    y_A = 0.0
     phi_p = 0.0
     phi_G = 0.0
 
     # Initialize filament
     fil = Filament(z, z0, w, V_inf, G_A, y_A, phi_p, phi_G)
+
+    # Compare integrands
+    V = boole_integration_vec(fil.dV, 0.0, 1000.0, 10001)
+    print("Original: V = {0}".format(V))
+    V = boole_integration(fil.dV_alt, 0.5*np.pi, 0.0, 1000001)
+    print("Simplified: Vy = {0}".format(V))
 
     ## Loop through limits of integration
     #bs = np.logspace(0, 4, 50)
@@ -130,27 +162,27 @@ if __name__=="__main__":
     #plt.xscale('log')
     #plt.show()
 
-    # Loop through limits of integration
-    dx_des = 0.001
-    bs = np.logspace(0, 3, 10)
-    Vs = np.zeros((10,3))
-    for i, b in enumerate(bs):
-        print(b)
-        N = b/dx_des
-        N = int(N//5)
-        N = N*5+1
-        Vs[i] = boole_integration_vec(fil.dV, 0, b, N)
+    ## Loop through limits of integration
+    #dx_des = 0.001
+    #bs = np.logspace(0, 3, 10)
+    #Vs = np.zeros((10,3))
+    #for i, b in enumerate(bs):
+    #    print(b)
+    #    N = b/dx_des
+    #    N = int(N//5)
+    #    N = N*5+1
+    #    Vs[i] = boole_integration_vec(fil.dV, 0, b, N)
 
-    # Plot results
-    plt.figure()
-    plt.plot(bs, Vs[:,0], label='Vx')
-    plt.plot(bs, Vs[:,1], label='Vy')
-    plt.plot(bs, Vs[:,2], label='Vz')
-    plt.title("Boole's Rule")
-    plt.legend()
-    plt.xlabel('b')
-    plt.ylabel('Induced Vel')
-    plt.xscale('log')
-    plt.show()
+    ## Plot results
+    #plt.figure()
+    #plt.plot(bs, Vs[:,0], label='Vx')
+    #plt.plot(bs, Vs[:,1], label='Vy')
+    #plt.plot(bs, Vs[:,2], label='Vz')
+    #plt.title("Boole's Rule")
+    #plt.legend()
+    #plt.xlabel('b')
+    #plt.ylabel('Induced Vel')
+    #plt.xscale('log')
+    #plt.show()
 
-    print(Vs[-1,:])
+    #print(Vs[-1,:])
