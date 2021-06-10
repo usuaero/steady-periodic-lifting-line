@@ -139,9 +139,9 @@ if __name__=="__main__":
     fil = Filament(z, z0, w, V_inf, G_A, y_A, phi_p, phi_G)
 
     # Compare integrands
-    V = boole_integration_vec(fil.dV, 0.0, 1000.0, 10001)
-    print("Original: V = {0}".format(V))
-    V = boole_integration(fil.dV_alt, 0.5*np.pi, 0.0, 1000001)
+    V = boole_integration_vec(fil.dV, 0.0, 1000.0, 100001)
+    print("Original: Vy = {0}".format(V[1]))
+    V = boole_integration(fil.dV_alt, 0.5*np.pi, 0.0, 100001)
     print("Simplified: Vy = {0}".format(V))
 
     ## Loop through limits of integration
