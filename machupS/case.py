@@ -45,7 +45,7 @@ class Case:
         self.gamma = np.zeros((self._max_iter, self.wing.N))
 
         # Loop through iterations
-        print("{0:<20}{1:<20}".format("Iteration", "Pitch Angle [deg]"))
+        print("{0:<20}{1:<20}{2:<20}".format("Iteration", "Pitch Angle [deg]", "Plunge Vel [ft/s]"))
         print("".join(["-"]*40))
         k = 0
         x_curr = 0.0
@@ -60,7 +60,6 @@ class Case:
             u_n = np.zeros((self.wing.N, 3))
             u_n[:,2] = -np.cos(a)
             u_n[:,0] = -np.sin(a)
-            print("{0:<20}{1:<20}".format(k, np.degrees(a)))
 
             # Determine control and node points
             cp = np.zeros((self.wing.N, 3))
@@ -74,6 +73,7 @@ class Case:
 
             # Determine plunge velocity
             V_P = 2.0*np.pi*self._z_A*self._w*np.cos(2.0*np.pi*self._w*t+self._phi_z)
+            print("{0:<20}{1:<20}{2:<20}".format(k, np.degrees(a), V_P))
 
             # Determine V_sig due to freestream and plunging
             V_sig[:,0] = -self._V_inf
@@ -81,7 +81,12 @@ class Case:
 
             # Add effect of induced velocity from previous iterations
             v_mji = self.wing.get_influences(cp, k)
-            V_sig += np.einsum('ijkl,jk->il', v_mji[:,:k,:,:], self.gamma[:k,:])
+            V_sig += np.einsum('ijkl,jk->il', v_mji[:,:k-1,:,:], self.gamma[:k-1,:])
+
+            for i in range(self.wing.N):
+                plt.figure()
+                plt.plot(self.wing.y_cp, v_mji[i,k-1,:,1])
+                plt.show()
 
             # Calculate V_sig magnitudes
             V_sig_mag = vec_norm(V_sig)
@@ -93,14 +98,14 @@ class Case:
             # Assemble A matrix
             A = np.zeros((self.wing.N, self.wing.N))
             A[np.diag_indices(self.wing.N)] = 2.0*vec_norm(vec_cross(V_sig, self.wing.dl))
-            A -= V_sig_mag_2[:,np.newaxis]*self.wing.CLa*self.wing.dS*vec_inner(v_mji[:,k-1,:,:], u_n)
+            A -= V_sig_mag_2[:,np.newaxis]*self.wing.CLa*self.wing.dS*np.einsum('ikl,kl->ik', v_mji[:,k-1,:,:], u_n)
 
             # Solve for gamma
-            self.gamma[k,:] = np.linalg.solve(A, b)
+            self.gamma[k-1,:] = np.linalg.solve(A, b)
 
             # Plot solution
             plt.figure()
-            plt.plot(self.wing.y_cp, self.gamma[k,:])
+            plt.plot(self.wing.y_cp, self.gamma[k-1,:])
             plt.xlabel('y')
             plt.ylabel('$\\Gamma$')
             plt.show()
