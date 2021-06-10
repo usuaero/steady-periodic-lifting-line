@@ -21,12 +21,18 @@ if __name__=="__main__":
             "plunge_amplitude" : 1.0,
             "plunge_phase" : 0.0,
             "pitch_amplitude" : 5.0,
-            "pitch_phase" : 0.0
+            "pitch_phase" : 0.0,
+            "mean_alpha" : 0.0
         },
         "case_options" : {
-            "dt" : 0.01
+            "dt" : 0.01,
+            "max_iter" : 100000,
+            "planar" : True
         }
     }
 
     # Intiialize case
     my_case = ms.Case(**input_dict)
+
+    # Run
+    my_case.run()
