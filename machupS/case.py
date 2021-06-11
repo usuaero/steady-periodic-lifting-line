@@ -93,7 +93,7 @@ class Case:
                 V_sig[:,0] = -self._V_inf
                 V_sig[:,2] = V_P
                 V_inf = np.copy(V_sig)
-                V_inf_2 = vec_norm(V_inf)**2
+                V_inf_mag = vec_norm(V_inf)
 
                 # Add effect of induced velocity from previous iterations
                 v_mji = self.wing.get_influences(cp, k)
@@ -104,12 +104,14 @@ class Case:
                 V_sig_mag_2 = V_sig_mag**2
 
                 # Calculate b vector
-                b = V_inf_2*self.wing.CLa*(vec_inner(V_sig, u_n)-self.wing.aL0)*self.wing.dS
+                b = V_inf_mag**2*self.wing.CLa*(vec_inner(V_sig, u_n)/V_inf_mag-self.wing.aL0)*self.wing.dS
 
                 # Assemble A matrix
                 A = np.zeros((self.wing.N, self.wing.N))
                 A[np.diag_indices(self.wing.N)] = 2.0*vec_norm(vec_cross(V_inf, self.wing.dl))
-                A -= V_inf_2[:,np.newaxis]*self.wing.CLa*self.wing.dS*np.einsum('ikl,l->ik', v_mji[:,k-1,:,:], u_n)
+                A -= V_inf_mag[:,np.newaxis]*self.wing.CLa*self.wing.dS*np.einsum('ikl,l->ik', v_mji[:,k-1,:,:], u_n)
+                print(A)
+                print(b)
 
                 # Solve for gamma
                 self.gamma[k-1,:] = np.linalg.solve(A, b)
