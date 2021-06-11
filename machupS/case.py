@@ -71,6 +71,9 @@ class Case:
             if not self.wing.planar:
                 raise IOError
 
+            # Update wake points
+            self.wing.wake_points[k,:,:] = nodes
+
             # Determine plunge velocity
             V_P = 2.0*np.pi*self._z_A*self._w*np.cos(2.0*np.pi*self._w*t+self._phi_z)
             print("{0:<20}{1:<20}{2:<20}".format(k, np.degrees(a), V_P))
@@ -82,11 +85,6 @@ class Case:
             # Add effect of induced velocity from previous iterations
             v_mji = self.wing.get_influences(cp, k)
             V_sig += np.einsum('ijkl,jk->il', v_mji[:,:k-1,:,:], self.gamma[:k-1,:])
-
-            for i in range(self.wing.N):
-                plt.figure()
-                plt.plot(self.wing.y_cp, v_mji[i,k-1,:,1])
-                plt.show()
 
             # Calculate V_sig magnitudes
             V_sig_mag = vec_norm(V_sig)
@@ -113,6 +111,3 @@ class Case:
             # Update time and x position
             t += self._dt
             x_curr += self._dt*self._V_inf
-
-            # Calculate node points
-            self.wing.wake_points[k,:,:] = nodes

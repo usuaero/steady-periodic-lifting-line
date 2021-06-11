@@ -167,7 +167,8 @@ class Wing:
         r_2_mag = r_mag[:,:,1:]
 
         # Get transverse vortex influences
-        v_tran = vec_cross(r_1, r_2)*((r_1_mag+r_2_mag)/(4.0*np.pi*r_1_mag*r_2_mag*(r_1_mag*r_2_mag+vec_inner(r_1, r_2))))[:,:,:,np.newaxis]
+        with np.errstate(divide='ignore', invalid='ignore'):
+            v_tran = vec_cross(r_1, r_2)*((r_1_mag+r_2_mag)/(4.0*np.pi*r_1_mag*r_2_mag*(r_1_mag*r_2_mag+vec_inner(r_1, r_2))))[:,:,:,np.newaxis]
 
         # Set up for longitudinal calculation
         r_1 = r[:,:k,:,:]
