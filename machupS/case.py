@@ -110,8 +110,6 @@ class Case:
                 A = np.zeros((self.wing.N, self.wing.N))
                 A[np.diag_indices(self.wing.N)] = 2.0*vec_norm(vec_cross(V_inf, self.wing.dl))
                 A -= V_inf_mag[:,np.newaxis]*self.wing.CLa*self.wing.dS*np.einsum('ikl,l->ik', v_mji[:,k-1,:,:], u_n)
-                print(A)
-                print(b)
 
                 # Solve for gamma
                 self.gamma[k-1,:] = np.linalg.solve(A, b)
@@ -128,7 +126,9 @@ class Case:
                 dF = vec_cross(V_sig, self.wing.dl)*self.gamma[k-1,:][:,np.newaxis]
                 F = np.sum(dF, axis=0)
                 CL = -F[2]/(0.5*self._V_inf**2*self.wing.S)
+                # Save CL to array for integration?
                 CDi = -F[0]/(0.5*self._V_inf**2*self.wing.S)
+                # Save CD to array for intigration?
 
                 # Write results to file
                 line = "{0},{1},{2},{3},{4}".format(k, np.degrees(a), V_P, CL, CDi)
@@ -142,6 +142,18 @@ class Case:
                 # Update time and x position
                 t += self._dt
                 x_curr += self._dt*self._V_inf
+            
+            # Integrate CL, CD over one period (using file or array stored values)
+            '''
+            T = 1/self._w
+            CL_integ, CD_integ = integrate CL and CD from [self._V_inf*(t-T), self._V_inf*t]
+            # period-averaged CL, CD
+            CL_T_avg = CL_integ/(self._V_inf*T)
+            CL_D_avg = CD_integ/(self._V_inf*T)
+
+            '''
+
+
 
 
     def export_vtk(self, filename):

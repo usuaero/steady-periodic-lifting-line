@@ -13,20 +13,20 @@ if __name__=="__main__":
                 "CLa" : 6.28,
                 "aL0" : 0.0
             },
-            "N" : 5
+            "N" : 20
         },
         "state" : {
             "V_inf" : 10.0,
             "frequency" : 1.0,
-            "plunge_amplitude" : 0.0,
+            "plunge_amplitude" : 1.0,
             "plunge_phase" : 0.0,
-            "pitch_amplitude" : 0.0,
+            "pitch_amplitude" : 5.0,
             "pitch_phase" : 0.0,
             "mean_alpha" : 5.0
         },
         "case_options" : {
-            "dt" : 0.01,
-            "max_iter" : 1000,
+            "dt" : 0.001,
+            "max_iter" : 5000,
             "planar" : True
         }
     }
@@ -35,4 +35,4 @@ if __name__=="__main__":
     my_case = ms.Case(**input_dict)
 
     # Run
-    my_case.run(results_file='results.csv', verbose=True)
+    my_case.run(results_file='periodic_results.csv', verbose=True)
