@@ -98,6 +98,7 @@ class Wing:
 
         # Calculate dS
         self.dS = self.c*vec_norm(self.dl)
+        self.S = np.sum(self.dS).item()
 
 
     def _setup_grid(self):
@@ -161,14 +162,13 @@ class Wing:
         r_mag = vec_norm(r)
 
         # Set up for transverse calculation
-        r_1 = r[:,:,:-1,:]
-        r_2 = r[:,:,1:,:]
-        r_1_mag = r_mag[:,:,:-1]
-        r_2_mag = r_mag[:,:,1:]
+        r_1 = r[:,:k,:-1,:]
+        r_2 = r[:,:k,1:,:]
+        r_1_mag = r_mag[:,:k,:-1]
+        r_2_mag = r_mag[:,:k,1:]
 
         # Get transverse vortex influences
-        with np.errstate(divide='ignore', invalid='ignore'):
-            v_tran = vec_cross(r_1, r_2)*((r_1_mag+r_2_mag)/(4.0*np.pi*r_1_mag*r_2_mag*(r_1_mag*r_2_mag+vec_inner(r_1, r_2))))[:,:,:,np.newaxis]
+        v_tran = vec_cross(r_1, r_2)*((r_1_mag+r_2_mag)/(4.0*np.pi*r_1_mag*r_2_mag*(r_1_mag*r_2_mag+vec_inner(r_1, r_2))))[:,:,:,np.newaxis]
 
         # Set up for longitudinal calculation
         r_1 = r[:,:k,:,:]
@@ -183,13 +183,13 @@ class Wing:
         v_mji = np.zeros((self.N, k, self.N, 3))
 
         # Add downstream vortex
-        v_mji -= v_tran[:,:k,:,:]
+        v_mji -= np.copy(v_tran)
 
         # Add right vortex
         v_mji -= v_long[:,:,1:,:]
 
         # Add upstream vortex
-        v_mji[:,:-1,:,:] += v_tran[:,1:-1,:,:]
+        v_mji[:,:-1,:,:] += v_tran[:,1:,:,:]
 
         # Add left vortex
         v_mji += v_long[:,:,:-1,:]
